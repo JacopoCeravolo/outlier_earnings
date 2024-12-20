@@ -50,28 +50,33 @@ if uploaded_file is not None:
             number_of_groups = grouped.ngroups
             average_earnings = total_earnings / number_of_groups if number_of_groups > 0 else 0
 
-            # -------------------------------
+     
             # Calculate Current Pay Period
             # -------------------------------
             # Identify the most recent date
             most_recent_date = df['workDate'].max()
-
+            
             # Determine the day of the week (Monday=0, Tuesday=1, ..., Sunday=6)
             day_of_week = most_recent_date.weekday()
-
-            # Determine pay_period_end based on the most recent date
-            if day_of_week == 1:  # Tuesday
-                pay_period_end = most_recent_date - pd.Timedelta(days=1)  # Previous Monday
-            else:
-                pay_period_end = most_recent_date - pd.Timedelta(days=day_of_week)  # Last Monday
-
-            # Determine pay_period_start (Tuesday of the previous week)
-            pay_period_start = pay_period_end - pd.Timedelta(days=6)
-
+            
+            # Determine the start and end of the current pay period (Tuesday to Monday)
+            if day_of_week >= 1:  # Day is Tuesday (1) or later
+                pay_period_start = most_recent_date - pd.Timedelta(days=(day_of_week - 1))  # Tuesday of current week
+            else:  # Day is Monday (0)
+                pay_period_start = most_recent_date - pd.Timedelta(days=6)  # Previous Tuesday
+            
+            pay_period_end = pay_period_start + pd.Timedelta(days=6)  # Following Monday
+            
             # Sum payouts from pay_period_start to pay_period_end, inclusive
             current_pay_period = df[
                 (df['workDate'] >= pay_period_start) & (df['workDate'] <= pay_period_end)
             ]['payout'].sum()
+            
+            # Debugging prints (optional)
+            # print("Most recent date:", most_recent_date)
+            # print("Pay period start:", pay_period_start)
+            # print("Pay period end:", pay_period_end)
+            # print("Current pay period payout sum:", current_pay_period)
 
             # -------------------------------
             # Display Metrics in Three Columns
